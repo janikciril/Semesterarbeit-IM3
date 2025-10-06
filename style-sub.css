@@ -1,0 +1,51 @@
+/* Google Font importieren */
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap');
+
+/* Basis-Stile */
+body {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(to bottom, #B2C9F4, #CAD1DE);
+  font-family: 'Josefin Sans', sans-serif;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+}
+
+/* Typografie */
+h1 {
+  font-weight: 700; /* Bold */
+  font-size: 2.5rem;
+  margin-top: 2rem;
+}
+
+h2, h3 {
+  font-weight: 600; /* Semi-Bold */
+  margin: 1.5rem 0 1rem 0;
+}
+
+p {
+  font-weight: 300; /* Light */
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto 1.5rem auto;
+  line-height: 1.6;
+}
+
+/* Buttons & Links */
+a, button {
+  font-weight: 600; /* Semi-Bold */
+  text-decoration: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  background-color: #333;
+  color: white;
+  transition: background 0.3s ease;
+}
+
+a:hover, button:hover {
+  background-color: #555;
+}
