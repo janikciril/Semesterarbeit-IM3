@@ -1,51 +1,78 @@
-/* Google Font importieren */
+/* Google Font */
 @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap');
 
-/* Basis-Stile */
+/* Grundlayout */
 body {
   margin: 0;
-  height: 100vh;
-  background: linear-gradient(to bottom, #DBE8FF, #CAD1DE);
+  background: linear-gradient(to bottom, #8AA4D3, #5E6C8B);
   font-family: 'Josefin Sans', sans-serif;
   color: #333;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  height: 100vh;
+}
+
+/* Titel */
+header {
   text-align: center;
+  padding: 2rem 1rem 1rem;
+  z-index: 2;
 }
 
-/* Typografie */
-h1 {
-  font-weight: 700; /* Bold */
+header h1 {
   font-size: 2.5rem;
-  margin-top: 2rem;
+  margin: 0;
+  font-weight: 700;
 }
 
-h2, h3 {
-  font-weight: 600; /* Semi-Bold */
-  margin: 1.5rem 0 1rem 0;
+/* Kartencontainer */
+.map-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-p {
-  font-weight: 300; /* Light */
-  font-size: 1.2rem;
-  max-width: 600px;
-  margin: 0 auto 1.5rem auto;
-  line-height: 1.6;
+.map-image {
+  width: 140%;
+  height: auto;
+  max-height: 100vh;
+  object-fit: cover;
+  /*display: block;*/
+  object-position: 50% 90%;
 }
 
-/* Buttons & Links */
-a, button {
-  font-weight: 600; /* Semi-Bold */
+/* Ski-Button (Marker + Text) */
+.ski-button {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-decoration: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  background-color: #333;
-  color: white;
-  transition: background 0.3s ease;
+  color: #111;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transform: translate(-50%, -50%);
 }
 
-a:hover, button:hover {
-  background-color: #555;
+/* Roter Punkt */
+.ski-button .dot {
+  width: 30px;
+  height: 30px;
+  background-color: red;
+  border-radius: 50%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover Effekt */
+.ski-button:hover .dot {
+  transform: scale(1.2);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Name unter dem Punkt */
+.ski-button span {
+  margin-top: 0.3rem;
+  text-align: center;
 }

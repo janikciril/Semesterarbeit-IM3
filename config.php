@@ -1,20 +1,36 @@
 <?php
+/**
+ * config.php
+ * ==========
+ * Konfigurationsdatei für die Datenbankverbindung (PDO)
+ * Wird von load.php automatisch eingebunden.
+ * 
+ * ⚠️ Hinweis:
+ * Diese Datei sollte im .gitignore stehen, um sensible Daten nicht zu veröffentlichen.
+ */
 
-// Definition der Verbindungsparameter für die Datenbank
-$host     = 'hu0t5k.myd.infomaniak.com';     // Hostserver, auf dem die DB läuft.
-// «localhost» bedeutet: die selbe Serveradresse, auf dem auch die Seiten gespeichert sind
+// === Basisparameter ===
+$host     = 'hu0t5k.myd.infomaniak.com';  // Datenbank-Host (Infomaniak)
+$dbname   = 'hu0t5k_im3';                 // Name der Datenbank
+$username = 'hu0t5k_Janik';               // DB-Benutzername
+$password = 'Hallo22334455@';             // DB-Passwort
 
-$dbname   = 'hu0t5k_Janik';   // Name der Datenbank
-$username = 'hu0t5k_im3';   // Benutzername für die DB
-$password = 'Hallo22334455@';   // Passwort für die DB
+// === PDO Data Source Name (DSN) ===
+$dsn = "mysql:host={$host};dbname={$dbname};charset=utf8mb4";
 
-
-// DSN (Datenquellenname) für PDO
-$dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4"; // siehe https://en.wikipedia.org/wiki/Data_source_name
-
-// Optionen für PDO
+// === PDO Optionen ===
 $options = [
-  PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // Aktiviert die Ausnahmebehandlung für Datenbankfehler
-  PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, // Legt den Standard-Abrufmodus auf assoziatives Array fest
-  PDO::ATTR_EMULATE_PREPARES   => false // Deaktiviert die Emulation vorbereiteter Anweisungen, für bessere Leistung
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,  // Fehler als Exceptions
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,        // Assoziative Arrays als Default
+    PDO::ATTR_EMULATE_PREPARES   => false,                   // Native Prepared Statements verwenden
 ];
+
+// === Optional: Dev-Modus zur Fehlersichtbarkeit ===
+$devMode = true; // auf false setzen, wenn auf Live-Server
+
+if ($devMode) {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+}
+?>
