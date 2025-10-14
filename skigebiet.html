@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skigebiet</title>
+  <link rel="stylesheet" href="style-sub.css">
+</head>
+<body>
+  <h1 id="skiTitle" style="text-align:center; padding-top: 2rem;"></h1>
+
+  <!-- Dropdown für Zeitraum -->
+  <div style="text-align:center; margin-bottom:1rem;">
+    <label for="timeRange">Zeitraum:</label>
+    <select id="timeRange">
+      <option value="7">1 Woche</option>
+      <option value="21">3 Wochen</option>
+      <option value="30">1 Monat</option>
+      <option value="90">3 Monate</option>
+    </select>
+  </div>
+
+  <!-- Skigebiete auswählen -->
+  <div id="checkboxContainer" style="text-align:center; margin-bottom:1rem;"></div>
+
+  <div style="width:80%; max-width:800px; margin:0 auto;">
+    <canvas id="uviChart"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

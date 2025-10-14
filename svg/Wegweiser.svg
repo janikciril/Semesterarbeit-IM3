@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="map" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 841.89 595.28">
+  <rect x="420.38" y="170" width="11.91" height="270.43" fill="#8c5e31"/>
+  <rect x="432.28" y="170" width="15.26" height="270.43" fill="#cca992"/>
+  <polygon points="567.73 274.99 310.81 274.99 257.62 228.58 310.81 186.99 567.73 186.99 567.73 274.99" fill="#f2d841"/>
+</svg>
