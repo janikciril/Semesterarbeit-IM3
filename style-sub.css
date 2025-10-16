@@ -89,3 +89,17 @@ a, button {
 a:hover, button:hover {
   background-color: #555;
 }
+
+.wegweiser-svg {
+  position: relative;       /* bleibt unten kleben */
+  bottom: -400px;
+  left: 50%;             /* horizontal in der Mitte */
+  transform: translateX(-50%); /* genau zentrieren */
+  width: 100%;           /* optional: volle Breite */
+  text-align: center;    /* falls Bild kleiner ist */
+}
+
+.wegweiser-svg img {
+  max-width: 400px;      /* Beispiel: Größe begrenzen */
+  height: auto;
+}
