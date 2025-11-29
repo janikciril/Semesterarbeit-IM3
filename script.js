@@ -1,132 +1,165 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const params = new URLSearchParams(window.location.search);
-    const initialLocation = params.get("location");
+    // Konstanten
+    const API_BASE = "https://ichhassesunnecreme.janik-honegger.ch";
+    const SVG_PATHS = {
+        normal: "svg/ski.svg",
+        simple: "svg/ski_einfach.svg"
+    };
+    const DEVIATION_THRESHOLD = 5;
 
-    const allLocations = ["Laax","Davos","St. Moritz","Samnaun","Disentis"];
+    const allLocations = ["Laax", "Davos", "St. Moritz", "Samnaun", "Disentis"];
     const colors = {
-        "Laax":"#ffcf33",
-        "Davos":"#33a3ff",
-        "St. Moritz":"#2edc07",
-        "Samnaun":"#ff5733",
-        "Disentis":"#8e44ad"
+        "Laax": "#ffcf33",
+        "Davos": "#33a3ff",
+        "St. Moritz": "#2edc07",
+        "Samnaun": "#ff5733",
+        "Disentis": "#8e44ad"
     };
 
+    // DOM-Elemente
+    const params = new URLSearchParams(window.location.search);
+    const initialLocation = params.get("location");
     const titleEl = document.getElementById("skiTitle");
     const ctx = document.getElementById("uviChart").getContext("2d");
+    
     const timeRangeSelect = document.getElementById("timeRange");
     const checkboxContainer = document.getElementById("checkboxContainer");
     const averageDisplayEl = document.getElementById("averageDisplay");
     const deviationTextEl = document.getElementById("deviationText");
     const skiGraphicEl = document.querySelector(".ski-graphic");
+    
     let chart;
 
-    // Checkboxen für alle Skigebiete, initialLocation zuerst
-    const locationsToShow = initialLocation 
-        ? [initialLocation, ...allLocations.filter(loc => loc !== initialLocation)]
-        : allLocations;
-    
-    locationsToShow.forEach(loc => {
+    // Helper-Funktionen
+    const setSkiGraphic = (type = "normal") => {
+        if (skiGraphicEl) {
+            skiGraphicEl.src = SVG_PATHS[type];
+        }
+    };
+
+    const clearAverageDisplay = () => {
+        averageDisplayEl.textContent = "";
+        deviationTextEl.textContent = "";
+        setSkiGraphic("normal");
+    };
+
+    const getSelectedLocations = () => {
+        return Array.from(checkboxContainer.querySelectorAll("input[type=checkbox]:checked"))
+            .map(cb => cb.value);
+    };
+
+    // Checkboxen erstellen
+    const createCheckbox = (location) => {
         const label = document.createElement("label");
         label.className = "location-button";
-        label.style.backgroundColor = colors[loc];
+        label.style.backgroundColor = colors[location];
         label.style.color = "#000";
-        
+
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
-        checkbox.value = loc;
-        checkbox.checked = loc === initialLocation; // Initial location is checked by default
+        checkbox.value = location;
+        checkbox.checked = location === initialLocation;
+        
         if (checkbox.checked) {
             label.classList.add("checked");
         }
-        checkbox.addEventListener("change", function() {
-            // Wenn die Checkbox deaktiviert wird, prüfe ob es die letzte war
-            if (!this.checked) {
-                const checkedCount = checkboxContainer.querySelectorAll("input[type=checkbox]:checked").length;
-                
-                // Verhindere das Deaktivieren, wenn dies die letzte aktive Checkbox wäre
-                if (checkedCount === 0) {
-                    this.checked = true; // Setze die Checkbox wieder auf checked
-                    return; // Beende die Funktion ohne weitere Aktionen
-                }
-            }
+
+        checkbox.addEventListener("change", () => {
+            const checkedCount = getSelectedLocations().length;
             
-            if (this.checked) {
-                label.classList.add("checked");
-            } else {
-                label.classList.remove("checked");
+            if (!checkbox.checked && checkedCount === 0) {
+                checkbox.checked = true;
+                return;
             }
+
+            label.classList.toggle("checked", checkbox.checked);
             updateChart();
         });
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(loc));
-        checkboxContainer.appendChild(label);
-    });
 
-    function fetchData(locations) {
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(location));
+        checkboxContainer.appendChild(label);
+    };
+
+    // Initialisierung der Checkboxen
+    const locationsToShow = initialLocation
+        ? [initialLocation, ...allLocations.filter(loc => loc !== initialLocation)]
+        : allLocations;
+    
+    locationsToShow.forEach(createCheckbox);
+
+    // Daten-Funktionen
+    const fetchData = async (locations) => {
         const promises = locations.map(loc =>
-            fetch(`https://ichhassesunnecreme.janik-honegger.ch/unload.php?location=${encodeURIComponent(loc)}`)
+            fetch(`${API_BASE}/unload.php?location=${encodeURIComponent(loc)}`)
                 .then(res => res.json())
-                .then(data => ({loc, data}))
+                .then(data => ({ loc, data }))
         );
         return Promise.all(promises);
-    }
+    };
 
-    function filterByDays(data, days) {
+    const filterByDays = (data, days) => {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - days);
         return data.filter(d => new Date(d.date) >= cutoff);
-    }
+    };
 
-    function buildChart(locations, days) {
-        fetchData(locations).then(results => {
-            if (results.length === 0) return;
+    const getDateKey = (date) => new Date(date).toDateString();
+
+    const calculateDailyAverages = (filteredData) => {
+        const dayData = new Map();
+        
+        filteredData.forEach(d => {
+            const dateKey = getDateKey(d.date);
+            const uvValue = parseFloat(d.uvindex) || 0;
             
-            // Group data by day and get unique dates for labels
+            if (!dayData.has(dateKey)) {
+                dayData.set(dateKey, []);
+            }
+            dayData.get(dateKey).push(uvValue);
+        });
+
+        return dayData;
+    };
+
+    // Chart-Funktionen
+    const buildChart = async (locations, days) => {
+        try {
+            const results = await fetchData(locations);
+            if (results.length === 0) return;
+
+            // Alle eindeutigen Daten sammeln
             const allDates = new Set();
             results.forEach(r => {
-                const filtered = filterByDays(r.data, days);
-                filtered.forEach(d => {
-                    const date = new Date(d.date);
-                    const dateKey = date.toDateString();
-                    allDates.add(dateKey);
+                filterByDays(r.data, days).forEach(d => {
+                    allDates.add(getDateKey(d.date));
                 });
             });
-            
-            // Sort dates and create labels (always day-level granularity)
+
+            // Sortierte Datums-Labels erstellen
             const sortedDates = Array.from(allDates).sort((a, b) => 
                 new Date(a) - new Date(b)
             );
-            const labels = sortedDates.map(dateKey => {
-                const date = new Date(dateKey);
-                return date.toLocaleDateString("de-DE", {day: "numeric", month: "short"});
-            });
+            
+            const labels = sortedDates.map(dateKey =>
+                new Date(dateKey).toLocaleDateString("de-DE", {
+                    day: "numeric",
+                    month: "short"
+                })
+            );
 
-            // Group data by day for each location (average multiple entries per day)
+            // Datasets für jede Location erstellen
             const datasets = results.map(r => {
                 const filtered = filterByDays(r.data, days);
-                
-                // Group by day and calculate average UV index per day
-                const dayData = new Map();
-                filtered.forEach(d => {
-                    const date = new Date(d.date);
-                    const dateKey = date.toDateString();
-                    const uvValue = parseFloat(d.uvindex) || 0;
-                    
-                    if (!dayData.has(dateKey)) {
-                        dayData.set(dateKey, []);
-                    }
-                    dayData.get(dateKey).push(uvValue);
-                });
-                
-                // Calculate average per day and map to label positions
+                const dayData = calculateDailyAverages(filtered);
+
                 const dataValues = sortedDates.map(dateKey => {
                     const values = dayData.get(dateKey) || [];
-                    if (values.length === 0) return null;
-                    // Average the values for the day
-                    const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
-                    return avg;
+                    return values.length > 0
+                        ? values.reduce((sum, val) => sum + val, 0) / values.length
+                        : null;
                 });
-                
+
                 return {
                     label: r.loc,
                     data: dataValues,
@@ -136,19 +169,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 };
             });
 
-            if(chart) chart.destroy();
+            if (chart) chart.destroy();
 
             chart = new Chart(ctx, {
-                type:"line",
-                data:{labels, datasets},
-                options:{
-                    responsive:true,
-                    plugins:{
-                        legend:{display:false},
-                        title:{display:false}
+                type: "line",
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
                     },
-                    scales:{
-                        x:{
+                    scales: {
+                        x: {
                             ticks: {
                                 maxRotation: 45,
                                 minRotation: 45,
@@ -156,106 +189,86 @@ document.addEventListener("DOMContentLoaded", () => {
                                 maxTicksLimit: days > 7 ? 15 : 30
                             }
                         },
-                        y:{
-                            min:0,
-                            max:7,
-                            ticks:{stepSize:1}
+                        y: {
+                            min: 0,
+                            max: 7,
+                            ticks: { stepSize: 1 }
                         }
                     }
                 }
             });
-        }).catch(err=>{
+        } catch (err) {
             console.error(err);
-            titleEl.textContent="❌ Daten konnten nicht geladen werden";
-        });
-    }
+            titleEl.textContent = "❌ Daten konnten nicht geladen werden";
+        }
+    };
 
-    function updateChart() {
-        const selected = [];
-        const checkboxes = checkboxContainer.querySelectorAll("input[type=checkbox]");
-        checkboxes.forEach(cb => { if(cb.checked) selected.push(cb.value); });
+    const updateChart = () => {
+        const selected = getSelectedLocations();
         buildChart(selected, parseInt(timeRangeSelect.value));
-    }
+    };
 
-    titleEl.textContent = initialLocation ? initialLocation.toUpperCase() : "Alle Skigebiete";
+    // Durchschnitts-Funktionen
+    const calculateDeviation = (todayAvg, allTimeAvg) => {
+        return ((todayAvg - allTimeAvg) / allTimeAvg) * 100;
+    };
 
-    // Funktion zum Laden des Durchschnitts
-    async function loadAverage(location) {
+    const formatDeviation = (deviation) => {
+        const absDeviation = Math.abs(deviation);
+        
+        if (absDeviation < DEVIATION_THRESHOLD) {
+            deviationTextEl.textContent = "durchschnittlich";
+            setSkiGraphic("simple");
+        } else {
+            const rounded = Math.round(absDeviation);
+            deviationTextEl.textContent = deviation > 0
+                ? `${rounded}% höher`
+                : `${rounded}% tiefer`;
+            setSkiGraphic("normal");
+        }
+    };
+
+    const loadAverage = async (location) => {
         if (!location) {
-            averageDisplayEl.textContent = "";
-            deviationTextEl.textContent = "";
-            if (skiGraphicEl) {
-                skiGraphicEl.src = "svg/ski.svg";
-            }
+            clearAverageDisplay();
             return;
         }
 
         try {
-            // Lade den Durchschnitt (max 180 Tage)
-            const avgResponse = await fetch(`https://ichhassesunnecreme.janik-honegger.ch/average.php?location=${encodeURIComponent(location)}`);
+            const [avgResponse, todayResponse] = await Promise.all([
+                fetch(`${API_BASE}/average.php?location=${encodeURIComponent(location)}`),
+                fetch(`${API_BASE}/today-average.php?location=${encodeURIComponent(location)}`)
+            ]);
+
             const avgData = await avgResponse.json();
-            
+            const todayData = await todayResponse.json();
+
             if (avgData.average !== undefined) {
                 averageDisplayEl.textContent = `Ø${avgData.average}`;
-            } else {
-                averageDisplayEl.textContent = "";
             }
 
-            // Lade den Durchschnitt für heute
-            const todayResponse = await fetch(`https://ichhassesunnecreme.janik-honegger.ch/today-average.php?location=${encodeURIComponent(location)}`);
-            const todayData = await todayResponse.json();
-            
             if (todayData.average !== undefined && avgData.average !== undefined) {
-                const todayAvg = todayData.average;
-                const allTimeAvg = avgData.average;
-                
-                // Berechne die Abweichung in Prozent
-                const deviation = ((todayAvg - allTimeAvg) / allTimeAvg) * 100;
-                const absDeviation = Math.abs(deviation);
-                
-                if (absDeviation < 5) {
-                    // Sehr nah am Durchschnitt, zeige "durchschnittlich" und einfaches Ski-Graphic
-                    deviationTextEl.textContent = "durchschnittlich";
-                    if (skiGraphicEl) {
-                        skiGraphicEl.src = "svg/ski_einfach.svg";
-                    }
-                } else {
-                    // Zeige Abweichung und normales Ski-Graphic
-                    const roundedDeviation = Math.round(absDeviation);
-                    if (deviation > 0) {
-                        deviationTextEl.textContent = `${roundedDeviation}% höher`;
-                    } else {
-                        deviationTextEl.textContent = `${roundedDeviation}% tiefer`;
-                    }
-                    if (skiGraphicEl) {
-                        skiGraphicEl.src = "svg/ski.svg";
-                    }
-                }
+                const deviation = calculateDeviation(todayData.average, avgData.average);
+                formatDeviation(deviation);
             } else {
                 deviationTextEl.textContent = "";
-                // Setze auf Standard-Graphic wenn keine Daten verfügbar
-                if (skiGraphicEl) {
-                    skiGraphicEl.src = "svg/ski.svg";
-                }
+                setSkiGraphic("normal");
             }
         } catch (error) {
             console.error("Fehler beim Laden der Durchschnittswerte:", error);
-            averageDisplayEl.textContent = "";
-            deviationTextEl.textContent = "";
-            if (skiGraphicEl) {
-                skiGraphicEl.src = "svg/ski.svg";
-            }
+            clearAverageDisplay();
         }
-    }
+    };
 
-    // Initiales Laden der Durchschnittswerte
+    // Initialisierung
+    titleEl.textContent = initialLocation
+        ? initialLocation.toUpperCase()
+        : "Alle Skigebiete";
+
     if (initialLocation) {
         loadAverage(initialLocation);
     }
 
-    // Initiales Chart
     updateChart();
-
-    // Zeitraum ändern
     timeRangeSelect.addEventListener("change", updateChart);
 });
