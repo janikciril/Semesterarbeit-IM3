@@ -26,21 +26,20 @@ header h1 {
 }
 
 /* Kartencontainer */
-.map-container {
+.map-container-wrapper {
   flex: 1;
-  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
+.map-container {
+  position: relative;
+}
+
 .map-image {
-  width: 140%;
+  width: 100%;
   height: auto;
-  max-height: 100vh;
-  object-fit: cover;
-  /*display: block;*/
-  object-position: 50% 90%;
 }
 
 /* Ski-Button (Marker + Text) */
