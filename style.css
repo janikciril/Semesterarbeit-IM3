@@ -4,6 +4,7 @@
 /* Grundlayout */
 body {
   margin: 0;
+  padding: 0 20px;
   background: linear-gradient(to bottom, #8AA4D3, #5E6C8B);
   font-family: 'Josefin Sans', sans-serif;
   color: #333;

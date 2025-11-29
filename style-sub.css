@@ -4,6 +4,7 @@
 /* Basis-Stile */
 body {
   margin: 0;
+  padding: 0 20px;
   background: linear-gradient(to bottom, #B2C9F4, #CAD1DE);
   font-family: 'Josefin Sans', sans-serif;
   color: #333;
@@ -40,8 +41,16 @@ p {
   font-weight: 400; 
   font-size: 1.5rem;
   margin-top: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   color: #444;
+}
+
+/* Durchschnittsanzeige */
+.average-display {
+  font-weight: 400;
+  font-size: 3.2rem;
+  margin: 1.6rem 0;
+  color: #333;
 }
 
 /* Container für Bild */
@@ -51,8 +60,40 @@ p {
 
 /* Bild selbst */
 .dude-image {
-  max-width: 80%;        /* nicht breiter als 80% der Seite */
-  height: auto;          /* Proportionen beibehalten */
+  width: 80%;
+  max-width: 640px;
+  height: auto;
+}
+
+/* Ski Graphic Container */
+.ski-graphic-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2rem 0;
+  width: 100%;
+}
+
+.ski-graphic {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  display: block;
+}
+
+/* Deviation Text Overlay */
+.deviation-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 700;
+  font-size: 2rem;
+  color: #000;
+  text-align: center;
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 /* Dropdown Container */

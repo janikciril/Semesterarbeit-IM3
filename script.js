@@ -15,6 +15,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const ctx = document.getElementById("uviChart").getContext("2d");
     const timeRangeSelect = document.getElementById("timeRange");
     const checkboxContainer = document.getElementById("checkboxContainer");
+    const averageDisplayEl = document.getElementById("averageDisplay");
+    const deviationTextEl = document.getElementById("deviationText");
+    const skiGraphicEl = document.querySelector(".ski-graphic");
     let chart;
 
     // Checkboxen für alle Skigebiete, initialLocation zuerst
@@ -36,6 +39,17 @@ document.addEventListener("DOMContentLoaded", () => {
             label.classList.add("checked");
         }
         checkbox.addEventListener("change", function() {
+            // Wenn die Checkbox deaktiviert wird, prüfe ob es die letzte war
+            if (!this.checked) {
+                const checkedCount = checkboxContainer.querySelectorAll("input[type=checkbox]:checked").length;
+                
+                // Verhindere das Deaktivieren, wenn dies die letzte aktive Checkbox wäre
+                if (checkedCount === 0) {
+                    this.checked = true; // Setze die Checkbox wieder auf checked
+                    return; // Beende die Funktion ohne weitere Aktionen
+                }
+            }
+            
             if (this.checked) {
                 label.classList.add("checked");
             } else {
@@ -144,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         },
                         y:{
                             min:0,
-                            max:11,
+                            max:7,
                             ticks:{stepSize:1}
                         }
                     }
@@ -164,6 +178,80 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     titleEl.textContent = initialLocation ? initialLocation.toUpperCase() : "Alle Skigebiete";
+
+    // Funktion zum Laden des Durchschnitts
+    async function loadAverage(location) {
+        if (!location) {
+            averageDisplayEl.textContent = "";
+            deviationTextEl.textContent = "";
+            if (skiGraphicEl) {
+                skiGraphicEl.src = "svg/ski.svg";
+            }
+            return;
+        }
+
+        try {
+            // Lade den Durchschnitt (max 180 Tage)
+            const avgResponse = await fetch(`https://ichhassesunnecreme.janik-honegger.ch/average.php?location=${encodeURIComponent(location)}`);
+            const avgData = await avgResponse.json();
+            
+            if (avgData.average !== undefined) {
+                averageDisplayEl.textContent = `Ø${avgData.average}`;
+            } else {
+                averageDisplayEl.textContent = "";
+            }
+
+            // Lade den Durchschnitt für heute
+            const todayResponse = await fetch(`https://ichhassesunnecreme.janik-honegger.ch/today-average.php?location=${encodeURIComponent(location)}`);
+            const todayData = await todayResponse.json();
+            
+            if (todayData.average !== undefined && avgData.average !== undefined) {
+                const todayAvg = todayData.average;
+                const allTimeAvg = avgData.average;
+                
+                // Berechne die Abweichung in Prozent
+                const deviation = ((todayAvg - allTimeAvg) / allTimeAvg) * 100;
+                const absDeviation = Math.abs(deviation);
+                
+                if (absDeviation < 5) {
+                    // Sehr nah am Durchschnitt, zeige "durchschnittlich" und einfaches Ski-Graphic
+                    deviationTextEl.textContent = "durchschnittlich";
+                    if (skiGraphicEl) {
+                        skiGraphicEl.src = "svg/ski_einfach.svg";
+                    }
+                } else {
+                    // Zeige Abweichung und normales Ski-Graphic
+                    const roundedDeviation = Math.round(absDeviation);
+                    if (deviation > 0) {
+                        deviationTextEl.textContent = `${roundedDeviation}% höher`;
+                    } else {
+                        deviationTextEl.textContent = `${roundedDeviation}% tiefer`;
+                    }
+                    if (skiGraphicEl) {
+                        skiGraphicEl.src = "svg/ski.svg";
+                    }
+                }
+            } else {
+                deviationTextEl.textContent = "";
+                // Setze auf Standard-Graphic wenn keine Daten verfügbar
+                if (skiGraphicEl) {
+                    skiGraphicEl.src = "svg/ski.svg";
+                }
+            }
+        } catch (error) {
+            console.error("Fehler beim Laden der Durchschnittswerte:", error);
+            averageDisplayEl.textContent = "";
+            deviationTextEl.textContent = "";
+            if (skiGraphicEl) {
+                skiGraphicEl.src = "svg/ski.svg";
+            }
+        }
+    }
+
+    // Initiales Laden der Durchschnittswerte
+    if (initialLocation) {
+        loadAverage(initialLocation);
+    }
 
     // Initiales Chart
     updateChart();
