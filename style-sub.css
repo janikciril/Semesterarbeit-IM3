@@ -4,7 +4,6 @@
 /* Basis-Stile */
 body {
   margin: 0;
-  height: 100vh;
   background: linear-gradient(to bottom, #B2C9F4, #CAD1DE);
   font-family: 'Josefin Sans', sans-serif;
   color: #333;
@@ -73,33 +72,22 @@ p {
   width: 80%;
   max-width: 800px;
   margin: 0 auto;
+  display: flex;
+  justify-content: center;
 }
 
-/* Buttons & Links */
-a, button {
-  font-weight: 600; /* Semi-Bold */
-  text-decoration: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  background-color: #333;
-  color: white;
-  transition: background 0.3s ease;
+.wegweiser {
+  width: 100%;
+  margin-top: 80px;
 }
 
-a:hover, button:hover {
-  background-color: #555;
+.wegweiser a {
+ display: flex;
+ justify-content: center;
 }
 
-.wegweiser-svg {
-  position: relative;       /* bleibt unten kleben */
-  bottom: -400px;
-  left: 50%;             /* horizontal in der Mitte */
-  transform: translateX(-50%); /* genau zentrieren */
-  width: 100%;           /* optional: volle Breite */
-  text-align: center;    /* falls Bild kleiner ist */
-}
-
-.wegweiser-svg img {
-  max-width: 400px;      /* Beispiel: Größe begrenzen */
+.wegweiser img {
+  max-width: 180px;
   height: auto;
+  display: block;
 }
